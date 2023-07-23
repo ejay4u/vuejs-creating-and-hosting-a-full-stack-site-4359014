@@ -1,6 +1,7 @@
 import express from "express";
 import { MongoClient } from "mongodb";
 import path from "path";
+import { PassThrough } from "stream";
 
 async function start() {
   const url = `mongodb+srv://vue-server:innocent2009@coredevtest.ac6g3.mongodb.net/?retryWrites=true&w=majority`;
@@ -13,6 +14,13 @@ async function start() {
   app.use(express.json());
 
   app.use("/images", express.static(path.join(__dirname, "../assets")));
+
+  app.use(
+    express.static(path.resolve(__dirname, "../dist"), {
+      maxAge: "1y",
+      etag: false,
+    })
+  );
 
   function populateCartIds(ids) {
     return ids.map((id) => products.find((product) => product.id === id));
@@ -83,8 +91,14 @@ async function start() {
     res.json(populatedCart);
   });
 
-  app.listen(8000, () => {
-    console.log("Server is listening on port 8000");
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../dist/index.html"));
+  });
+
+  const port = process.env.PORT || 8000;
+
+  app.listen(port, () => {
+    console.log("Server is listening on port " + port);
   });
 }
 
